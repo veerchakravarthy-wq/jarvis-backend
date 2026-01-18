@@ -29,8 +29,9 @@ app.post("/chat", async (req, res) => {
     const data = await response.json();
 
     const reply =
-      data.output?.[0]?.content?.[0]?.text ||
-      "I am unable to respond right now.";
+  data.output_text ||
+  data.output?.[0]?.content?.find(c => c.type === "output_text")?.text ||
+  "I am unable to respond right now.";
 
     res.json({ reply });
   } catch (error) {
@@ -38,6 +39,8 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("JARVIS backend running on port 3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`JARVIS backend running on port ${PORT}`);
 });
