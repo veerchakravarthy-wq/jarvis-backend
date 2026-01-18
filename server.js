@@ -1,8 +1,8 @@
 import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
-import path from "path";           // <-- add this line
-import { fileURLToPath } from "url"; // <-- needed for __dirname in ES modules
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,8 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files (your HTML, JS, CSS)
-app.use(express.static(path.join(__dirname, "/"))); // <-- add this line
+// Serve static files
+app.use(express.static(path.join(__dirname, "/")));
 
 // Root route
 app.get("/", (req, res) => {
@@ -24,6 +24,15 @@ app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
 
+    // System prompt for Jarvis-style voice awareness
+    const systemPrompt = `
+You are JARVIS, a highly intelligent AI assistant.
+- Always assume the user is speaking to you via voice input.
+- Respond naturally, confidently, and in a polite, respectful tone.
+- Use clear, concise language as a human-like AI assistant.
+- Address the user as "Commander" when appropriate.
+`;
+
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -32,7 +41,7 @@ app.post("/chat", async (req, res) => {
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
-        input: userMessage
+        input: `${systemPrompt}\nUser: ${userMessage}`
       })
     });
 
@@ -54,5 +63,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`JARVIS backend running on port ${PORT}`);
 });
-      
-  
+
+    
