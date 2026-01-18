@@ -146,12 +146,24 @@ function send(textFromVoice = null) {
     return;
   }
 
-  const fallback = "I am processing that request, Commander.";
-  display(fallback);
-  speak(fallback);
+  // ---------- BACKEND GPT CALL ----------
+  fetch("https://<your-render-backend>.onrender.com/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: userText })
+  })
+  .then(res => res.json())
+  .then(data => {
+    display(data.reply);
+    speak(data.reply);
+  })
+  .catch(() => {
+    display("I am unable to respond right now.");
+    speak("I am unable to respond right now.");
+  });
 }
 
-/* ---------- TAP-TO-TALK FUNCTION ---------- */
+/* ---------- TAP-TO-TALK ---------- */
 function tapToTalk() {
   if (!("webkitSpeechRecognition" in window)) {
     alert("Speech recognition not supported");
