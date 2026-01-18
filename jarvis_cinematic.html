@@ -49,7 +49,7 @@
   <select id="voiceSelect"></select>
   <input id="userInput" placeholder="Type your message..." />
   <button onclick="send()">Send</button>
-  <button onclick="startListening()">🎤 Talk to JARVIS</button>
+  <button onclick="tapToTalk()">🎤 Tap to Talk</button>
   <div id="status"></div>
   <div id="messages"></div>
 </div>
@@ -71,11 +71,10 @@ function populateVoices() {
 }
 speechSynthesis.onvoiceschanged = populateVoices;
 
-/* ---------- SPEAK FUNCTION WITH STRONG MALE VOICE ---------- */
+/* ---------- STRONG MALE SPEAK FUNCTION ---------- */
 function speak(text) {
   const utter = new SpeechSynthesisUtterance(text);
 
-  // Auto-select a deep male voice if available
   const maleVoice = voices.find(v =>
     v.name.toLowerCase().includes("male") ||
     v.name.toLowerCase().includes("david") ||
@@ -84,24 +83,23 @@ function speak(text) {
   if (maleVoice) {
     utter.voice = maleVoice;
   } else if (voices[0]) {
-    utter.voice = voices[0]; // fallback
+    utter.voice = voices[0];
   }
 
-  utter.rate = 0.85;  // slightly slower
-  utter.pitch = 0.6;  // deeper tone
+  utter.rate = 0.85;
+  utter.pitch = 0.6;
   utter.volume = 1.0;
 
-  // HUD pulse effect while speaking
   const hud = document.getElementById("hud-container");
-  hud.style.borderColor = "#ff0000"; // pulse red
+  hud.style.borderColor = "#ff0000";
   utter.onend = () => {
-    hud.style.borderColor = "#00fff6"; // reset
+    hud.style.borderColor = "#00fff6";
   };
 
   speechSynthesis.speak(utter);
 }
 
-/* ---------- DISPLAY MESSAGES ---------- */
+/* ---------- DISPLAY ---------- */
 function display(text, sender = "JARVIS") {
   const div = document.createElement("div");
   div.textContent = sender + ": " + text;
@@ -132,7 +130,7 @@ function jarvisCommandRouter(text) {
   return { local: false };
 }
 
-/* ---------- SEND FUNCTION ---------- */
+/* ---------- SEND ---------- */
 function send(textFromVoice = null) {
   const input = document.getElementById("userInput");
   const userText = textFromVoice || input.value;
@@ -153,8 +151,8 @@ function send(textFromVoice = null) {
   speak(fallback);
 }
 
-/* ---------- WAKE-WORD LISTENING ---------- */
-function startListening() {
+/* ---------- TAP-TO-TALK FUNCTION ---------- */
+function tapToTalk() {
   if (!("webkitSpeechRecognition" in window)) {
     alert("Speech recognition not supported");
     return;
@@ -163,62 +161,27 @@ function startListening() {
   const recognition = new webkitSpeechRecognition();
   recognition.lang = "en-IN";
   recognition.interimResults = false;
-  recognition.continuous = true;
+  recognition.continuous = false;
 
-  document.getElementById("status").textContent = "Wake-word listening...";
+  document.getElementById("status").textContent = "Listening...";
 
   recognition.onresult = (event) => {
-    const text = event.results[event.results.length - 1][0].transcript.trim();
-    console.log("Heard:", text);
-
-    // Wake-word detection
-    if (/hey jarvis/i.test(text)) {
-      document.getElementById("status").textContent = "Activated! Listening command...";
-      speak("Yes, Commander?");
-      recognition.stop();
-      listenForCommand();
-    }
+    const text = event.results[0][0].transcript.trim();
+    send(text);
   };
 
   recognition.onerror = () => {
-    document.getElementById("status").textContent = "Voice error";
+    document.getElementById("status").textContent = "Voice error. Tap again.";
   };
 
   recognition.onend = () => {
-    recognition.start(); // resume wake-word listening
+    document.getElementById("status").textContent = "";
   };
 
   recognition.start();
 }
 
-/* ---------- LISTEN FOR COMMAND AFTER WAKE-WORD ---------- */
-function listenForCommand() {
-  const cmdRecog = new webkitSpeechRecognition();
-  cmdRecog.lang = "en-IN";
-  cmdRecog.interimResults = false;
-
-  cmdRecog.onstart = () => {
-    document.getElementById("status").textContent = "Listening for command...";
-  };
-
-  cmdRecog.onresult = (event) => {
-    const commandText = event.results[0][0].transcript.trim();
-    send(commandText);
-  };
-
-  cmdRecog.onerror = () => {
-    document.getElementById("status").textContent = "Command voice error";
-  };
-
-  cmdRecog.onend = () => {
-    document.getElementById("status").textContent = "Wake-word listening...";
-    startListening();
-  };
-
-  cmdRecog.start();
-}
-
-// Automatically populate voices on load
+// Populate voices on load
 populateVoices();
 </script>
 
