@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Serve static files
+// Serve static files (HTML, CSS, JS)
 app.use(express.static(path.join(__dirname, "/")));
 
 // Root route
@@ -24,15 +24,17 @@ app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
 
-    // System prompt for Jarvis-style voice awareness
+    // System prompt: JARVIS is voice-aware
     const systemPrompt = `
 You are JARVIS, a highly intelligent AI assistant.
 - Always assume the user is speaking to you via voice input.
-- Respond naturally, confidently, and in a polite, respectful tone.
-- Use clear, concise language as a human-like AI assistant.
-- Address the user as "Commander" when appropriate.
+- Respond naturally, confidently, and politely as if you can hear them.
+- Always address the user as "Commander".
+- Never say that you cannot hear.
+- Replies should be concise and human-like.
 `;
 
+    // Send to OpenAI
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -63,5 +65,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`JARVIS backend running on port ${PORT}`);
 });
-
-    
