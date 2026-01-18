@@ -19,6 +19,10 @@ app.get("/", (req, res) => {
   res.send("JARVIS backend is running");
 });
 
+app.get("/jarvis_cinematic.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "jarvis_cinematic.html"));
+});
+
 // Chat route
 app.post("/chat", async (req, res) => {
   try {
