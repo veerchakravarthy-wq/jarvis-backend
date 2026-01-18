@@ -74,11 +74,34 @@ speechSynthesis.onvoiceschanged = populateVoices;
 
 /* ---------- SPEAK ---------- */
 function speak(text) {
-  const utter = new SpeechSynthesisUtterance(text);
-  const selected = document.getElementById("voiceSelect").value;
-  if (voices[selected]) utter.voice = voices[selected];
-  utter.rate = 0.95;
-  utter.pitch = 0.9;
+  
+   const utter = new SpeechSynthesisUtterance(text);
+
+  // Auto-select a male voice (first matching male voice)
+  const maleVoice = voices.find(v =>
+    v.name.toLowerCase().includes("male") ||
+    v.name.toLowerCase().includes("david") || // common male voice in browsers
+    v.name.toLowerCase().includes("john")    // fallback
+  );
+
+  if (maleVoice) {
+    utter.voice = maleVoice;
+  } else if (voices[0]) {
+    utter.voice = voices[0]; // fallback
+  }
+
+  // Cinematic adjustments
+  utter.rate = 0.85;   // slightly slower
+  utter.pitch = 0.6;   // deeper tone
+  utter.volume = 1.0;  // full volume
+
+  // Animate HUD while speaking (optional)
+  const hud = document.getElementById("hud-container");
+  hud.style.borderColor = "#ff0000"; // pulse red when speaking
+  utter.onend = () => {
+    hud.style.borderColor = "#00fff6"; // reset after speaking
+  };
+
   speechSynthesis.speak(utter);
 }
 
