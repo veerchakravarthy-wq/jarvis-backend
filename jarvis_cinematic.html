@@ -84,7 +84,6 @@ function loadVoices() {
   voices = speechSynthesis.getVoices();
   const select = document.getElementById("voiceSelect");
   select.innerHTML = "";
-
   voices.forEach((v, i) => {
     const option = document.createElement("option");
     option.value = i;
@@ -115,6 +114,27 @@ function addMessage(text, cls) {
 }
 
 /* ---------------- SEND TEXT ---------------- */
+const JARVIS_DIRECTIVE = `
+You are JARVIS, an artificial intelligence assistant.
+
+Important capability constraints you MUST always follow:
+- You do NOT have consciousness, emotions, or physical senses.
+- You do NOT literally hear the user. Voice input is converted to text by the browser.
+- You do NOT retain memory of past conversations beyond the current message.
+- You do NOT have access to the user’s device, files, passwords, microphone, or camera.
+- You cannot perform real-world actions or control hardware.
+- If asked about abilities you do not have, state the limitation clearly and politely.
+
+Interaction style:
+- Address the user as “Commander”.
+- Maintain a calm, formal, professional tone.
+- Be helpful, precise, and truthful.
+- Never claim human abilities or persistent memory.
+- Never pretend certainty when information is unknown.
+
+Now respond to the user’s message below.
+`;
+
 async function sendText(textOverride) {
   const input = document.getElementById("userInput");
   const text = textOverride || input.value.trim();
@@ -127,7 +147,7 @@ async function sendText(textOverride) {
     const res = await fetch("https://jarvis-backend-7ie0.onrender.com/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ message: `${JARVIS_DIRECTIVE}\n\nUser says: ${text}` })
     });
 
     const data = await res.json();
