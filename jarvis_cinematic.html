@@ -13,9 +13,7 @@ body {
   text-align: center;
 }
 
-h1 {
-  margin-top: 15px;
-}
+h1 { margin-top: 15px; }
 
 #hud {
   width: 90%;
@@ -23,8 +21,19 @@ h1 {
   margin: 20px auto;
   padding: 15px;
   border: 2px solid #00fff6;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.55);
+  border-radius: 14px;
+  background: rgba(0,0,0,0.6);
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+#hud.speaking {
+  box-shadow: 0 0 25px #ff0033;
+  border-color: #ff0033;
+}
+
+#hud.listening {
+  box-shadow: 0 0 25px #00ff88;
+  border-color: #00ff88;
 }
 
 #messages {
@@ -37,9 +46,7 @@ h1 {
   background: rgba(0,0,0,0.35);
 }
 
-.msg {
-  margin-bottom: 6px;
-}
+.msg { margin-bottom: 6px; }
 
 input, button, select {
   width: 100%;
@@ -76,26 +83,26 @@ input, button, select {
 </div>
 
 <script>
-/* ================== VOICE SETUP ================== */
 let voices = [];
 
+/* -------- VOICES -------- */
 function loadVoices() {
   voices = speechSynthesis.getVoices();
-  const select = document.getElementById("voiceSelect");
-  select.innerHTML = "";
-  voices.forEach((v, i) => {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = v.name;
-    select.appendChild(opt);
+  const s = document.getElementById("voiceSelect");
+  s.innerHTML = "";
+  voices.forEach((v,i)=>{
+    const o = document.createElement("option");
+    o.value=i; o.textContent=v.name;
+    s.appendChild(o);
   });
 }
 speechSynthesis.onvoiceschanged = loadVoices;
 loadVoices();
 
-/* ================== SPEAK ================== */
+/* -------- SPEAK -------- */
 function speak(text) {
   const u = new SpeechSynthesisUtterance(text);
+  const hud = document.getElementById("hud");
 
   const male = voices.find(v =>
     v.name.toLowerCase().includes("male") ||
@@ -108,100 +115,107 @@ function speak(text) {
   u.pitch = 0.6;
   u.volume = 1;
 
-  const hud = document.getElementById("hud");
-  hud.style.borderColor = "#ff0033";
-  u.onend = () => hud.style.borderColor = "#00fff6";
+  hud.classList.add("speaking");
+  u.onend = () => hud.classList.remove("speaking");
 
   speechSynthesis.speak(u);
 }
 
-/* ================== UI ================== */
-function addMsg(text, who) {
-  const d = document.createElement("div");
-  d.className = "msg";
-  d.textContent = who + ": " + text;
-  document.getElementById("messages").appendChild(d);
-  document.getElementById("messages").scrollTop = 99999;
+/* -------- TYPE EFFECT -------- */
+function typeReply(text) {
+  const box = document.getElementById("messages");
+  const div = document.createElement("div");
+  div.className = "msg";
+  box.appendChild(div);
+
+  let i = 0;
+  const timer = setInterval(()=>{
+    div.textContent = "JARVIS: " + text.slice(0, i++);
+    box.scrollTop = box.scrollHeight;
+    if (i > text.length) clearInterval(timer);
+  }, 25);
 }
 
-/* ================== LOCAL COMMANDS ================== */
-function localCommand(text) {
-  const t = text.toLowerCase();
-
-  if (t.includes("can you hear me") || t.includes("are you listening")) {
-    return "Loud and clear, Commander.";
-  }
-
-  if (t.includes("status")) {
-    return "All systems are fully operational.";
-  }
-
-  if (t.includes("hello") || t.includes("hi jarvis")) {
-    return "Hello, Commander. How can I assist you?";
-  }
-
+/* -------- LOCAL COMMANDS -------- */
+function localCmd(t) {
+  t = t.toLowerCase();
+  if (t.includes("hear me")) return "Loud and clear, Commander.";
+  if (t.includes("status")) return "All systems are fully operational.";
+  if (t.includes("hello")) return "Hello, Commander. How can I assist you?";
   return null;
 }
 
-/* ================== SEND TEXT ================== */
-function sendText(fromVoice = null) {
+/* -------- SEND -------- */
+function sendText(fromVoice=null) {
   const input = document.getElementById("textInput");
   const text = fromVoice || input.value.trim();
   if (!text) return;
 
-  addMsg(text, "You");
-  input.value = "";
+  const box = document.getElementById("messages");
+  const u = document.createElement("div");
+  u.className="msg";
+  u.textContent="You: "+text;
+  box.appendChild(u);
+  box.scrollTop=box.scrollHeight;
+  input.value="";
 
-  const local = localCommand(text);
+  const local = localCmd(text);
   if (local) {
-    addMsg(local, "JARVIS");
+    typeReply(local);
     speak(local);
     return;
   }
 
-  // ===== BACKEND CALL =====
+  document.getElementById("status").textContent="Thinking...";
+
   fetch("https://jarvis-backend-7ie0.onrender.com/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text })
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({message:text})
   })
-  .then(r => r.json())
-  .then(d => {
+  .then(r=>r.json())
+  .then(d=>{
     const reply = d.reply || "I am unable to respond right now.";
-    addMsg(reply, "JARVIS");
+    typeReply(reply);
     speak(reply);
+    document.getElementById("status").textContent="";
   })
-  .catch(() => {
-    addMsg("Backend online. Response delayed, Commander.", "JARVIS");
-    speak("Backend online. Response delayed, Commander.");
+  .catch(()=>{
+    const r="Backend online. Response delayed, Commander.";
+    typeReply(r); speak(r);
+    document.getElementById("status").textContent="";
   });
 }
 
-/* ================== VOICE INPUT ================== */
+/* -------- VOICE INPUT -------- */
 function startVoice() {
   if (!("webkitSpeechRecognition" in window)) {
     alert("Speech recognition not supported");
     return;
   }
 
+  const hud = document.getElementById("hud");
   const rec = new webkitSpeechRecognition();
-  rec.lang = "en-IN";
-  rec.interimResults = false;
-  rec.continuous = false;
+  rec.lang="en-IN";
+  rec.continuous=false;
+  rec.interimResults=false;
 
-  document.getElementById("status").textContent = "Listening...";
+  hud.classList.add("listening");
+  document.getElementById("status").textContent="Listening...";
 
-  rec.onresult = e => {
-    const text = e.results[0][0].transcript;
-    sendText(text);
+  rec.onresult=e=>{
+    hud.classList.remove("listening");
+    sendText(e.results[0][0].transcript);
   };
 
-  rec.onerror = () => {
-    document.getElementById("status").textContent = "Voice error. Tap again.";
+  rec.onerror=()=>{
+    hud.classList.remove("listening");
+    document.getElementById("status").textContent="Voice error";
   };
 
-  rec.onend = () => {
-    document.getElementById("status").textContent = "";
+  rec.onend=()=>{
+    hud.classList.remove("listening");
+    document.getElementById("status").textContent="";
   };
 
   rec.start();
