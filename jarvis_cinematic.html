@@ -2,199 +2,210 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>JARVIS AI Cinematic</title>
+<title>JARVIS Cinematic AI</title>
+
 <style>
-  body {
-    background: #050b0b;
-    color: #00fff6;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    overflow: hidden;
-  }
-  #hud-container {
-    width: 90%;
-    max-width: 600px;
-    margin: 20px auto;
-    border: 1px solid #00fff6;
-    padding: 15px;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.5);
-  }
-  #messages {
-    height: 300px;
-    overflow-y: auto;
-    text-align: left;
-    margin-top: 10px;
-    padding: 5px;
-    border: 1px solid #00fff6;
-    border-radius: 5px;
-    background: rgba(0,0,0,0.3);
-  }
-  input, button, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    background: #001f1f;
-    color: #00fff6;
-    border: 1px solid #00fff6;
-    border-radius: 5px;
-  }
+body {
+  margin: 0;
+  background: radial-gradient(circle at center, #061a1a, #020606);
+  color: #00fff6;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+h1 {
+  margin-top: 15px;
+}
+
+#hud {
+  width: 90%;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 15px;
+  border: 2px solid #00fff6;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+#messages {
+  height: 280px;
+  overflow-y: auto;
+  text-align: left;
+  padding: 10px;
+  border: 1px solid #00fff6;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.35);
+}
+
+.msg {
+  margin-bottom: 6px;
+}
+
+input, button, select {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  background: #001818;
+  color: #00fff6;
+  border: 1px solid #00fff6;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+#status {
+  margin-top: 8px;
+  font-size: 14px;
+  opacity: 0.85;
+}
 </style>
 </head>
 
 <body>
-<h1>JARVIS Cinematic HUD</h1>
 
-<div id="hud-container">
+<h1>JARVIS CINEMATIC HUD</h1>
+
+<div id="hud">
   <select id="voiceSelect"></select>
-  <input id="userInput" placeholder="Type your message..." />
-  <button onclick="send()">Send</button>
-  <button onclick="tapToTalk()">🎤 Tap to Talk</button>
+
+  <input id="textInput" placeholder="Type a command..." />
+  <button onclick="sendText()">Send</button>
+  <button onclick="startVoice()">🎤 Tap to Talk</button>
+
   <div id="status"></div>
   <div id="messages"></div>
 </div>
 
 <script>
+/* ================== VOICE SETUP ================== */
 let voices = [];
 
-/* ---------- VOICE SETUP ---------- */
-function populateVoices() {
+function loadVoices() {
   voices = speechSynthesis.getVoices();
   const select = document.getElementById("voiceSelect");
   select.innerHTML = "";
-  voices.forEach((voice, i) => {
-    const option = document.createElement("option");
-    option.value = i;
-    option.textContent = voice.name;
-    select.appendChild(option);
+  voices.forEach((v, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = v.name;
+    select.appendChild(opt);
   });
 }
-speechSynthesis.onvoiceschanged = populateVoices;
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
 
-/* ---------- STRONG MALE SPEAK FUNCTION ---------- */
+/* ================== SPEAK ================== */
 function speak(text) {
-  const utter = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(text);
 
-  const maleVoice = voices.find(v =>
+  const male = voices.find(v =>
     v.name.toLowerCase().includes("male") ||
     v.name.toLowerCase().includes("david") ||
     v.name.toLowerCase().includes("john")
   );
-  if (maleVoice) {
-    utter.voice = maleVoice;
-  } else if (voices[0]) {
-    utter.voice = voices[0];
-  }
 
-  utter.rate = 0.85;
-  utter.pitch = 0.6;
-  utter.volume = 1.0;
+  u.voice = male || voices[0];
+  u.rate = 0.85;
+  u.pitch = 0.6;
+  u.volume = 1;
 
-  const hud = document.getElementById("hud-container");
-  hud.style.borderColor = "#ff0000";
-  utter.onend = () => {
-    hud.style.borderColor = "#00fff6";
-  };
+  const hud = document.getElementById("hud");
+  hud.style.borderColor = "#ff0033";
+  u.onend = () => hud.style.borderColor = "#00fff6";
 
-  speechSynthesis.speak(utter);
+  speechSynthesis.speak(u);
 }
 
-/* ---------- DISPLAY ---------- */
-function display(text, sender = "JARVIS") {
-  const div = document.createElement("div");
-  div.textContent = sender + ": " + text;
-  document.getElementById("messages").appendChild(div);
-  document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+/* ================== UI ================== */
+function addMsg(text, who) {
+  const d = document.createElement("div");
+  d.className = "msg";
+  d.textContent = who + ": " + text;
+  document.getElementById("messages").appendChild(d);
+  document.getElementById("messages").scrollTop = 99999;
 }
 
-/* ---------- COMMAND ROUTER ---------- */
-function jarvisCommandRouter(text) {
+/* ================== LOCAL COMMANDS ================== */
+function localCommand(text) {
   const t = text.toLowerCase();
 
-  if (
-    t.includes("can you hear me") ||
-    t.includes("are you listening") ||
-    t.includes("did you hear me")
-  ) {
-    return { reply: "Loud and clear, Commander.", local: true };
+  if (t.includes("can you hear me") || t.includes("are you listening")) {
+    return "Loud and clear, Commander.";
   }
 
   if (t.includes("status")) {
-    return { reply: "All systems are fully operational.", local: true };
+    return "All systems are fully operational.";
   }
 
   if (t.includes("hello") || t.includes("hi jarvis")) {
-    return { reply: "Hello, Commander. How can I assist you?", local: true };
+    return "Hello, Commander. How can I assist you?";
   }
 
-  return { local: false };
+  return null;
 }
 
-/* ---------- SEND ---------- */
-function send(textFromVoice = null) {
-  const input = document.getElementById("userInput");
-  const userText = textFromVoice || input.value;
-  if (!userText) return;
+/* ================== SEND TEXT ================== */
+function sendText(fromVoice = null) {
+  const input = document.getElementById("textInput");
+  const text = fromVoice || input.value.trim();
+  if (!text) return;
 
-  display(userText, "You");
+  addMsg(text, "You");
   input.value = "";
 
-  const routed = jarvisCommandRouter(userText);
-  if (routed.local) {
-    display(routed.reply);
-    speak(routed.reply);
+  const local = localCommand(text);
+  if (local) {
+    addMsg(local, "JARVIS");
+    speak(local);
     return;
   }
 
-  // ---------- BACKEND GPT CALL ----------
-  fetch("https://<your-render-backend>.onrender.com/chat", {
+  // ===== BACKEND CALL =====
+  fetch("https://jarvis-backend-7ie0.onrender.com/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: userText })
+    body: JSON.stringify({ message: text })
   })
-  .then(res => res.json())
-  .then(data => {
-    display(data.reply);
-    speak(data.reply);
+  .then(r => r.json())
+  .then(d => {
+    const reply = d.reply || "I am unable to respond right now.";
+    addMsg(reply, "JARVIS");
+    speak(reply);
   })
   .catch(() => {
-    display("I am unable to respond right now.");
-    speak("I am unable to respond right now.");
+    addMsg("Backend online. Response delayed, Commander.", "JARVIS");
+    speak("Backend online. Response delayed, Commander.");
   });
 }
 
-/* ---------- TAP-TO-TALK ---------- */
-function tapToTalk() {
+/* ================== VOICE INPUT ================== */
+function startVoice() {
   if (!("webkitSpeechRecognition" in window)) {
     alert("Speech recognition not supported");
     return;
   }
 
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang = "en-IN";
-  recognition.interimResults = false;
-  recognition.continuous = false;
+  const rec = new webkitSpeechRecognition();
+  rec.lang = "en-IN";
+  rec.interimResults = false;
+  rec.continuous = false;
 
   document.getElementById("status").textContent = "Listening...";
 
-  recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript.trim();
-    send(text);
+  rec.onresult = e => {
+    const text = e.results[0][0].transcript;
+    sendText(text);
   };
 
-  recognition.onerror = () => {
+  rec.onerror = () => {
     document.getElementById("status").textContent = "Voice error. Tap again.";
   };
 
-  recognition.onend = () => {
+  rec.onend = () => {
     document.getElementById("status").textContent = "";
   };
 
-  recognition.start();
+  rec.start();
 }
-
-// Populate voices on load
-populateVoices();
 </script>
 
 </body>
