@@ -26,15 +26,8 @@ h1 { margin-top: 15px; }
   transition: box-shadow 0.3s, border-color 0.3s;
 }
 
-#hud.speaking {
-  box-shadow: 0 0 25px #ff0033;
-  border-color: #ff0033;
-}
-
-#hud.listening {
-  box-shadow: 0 0 25px #00ff88;
-  border-color: #00ff88;
-}
+#hud.speaking { box-shadow: 0 0 25px #ff0033; border-color:#ff0033; }
+#hud.listening { box-shadow: 0 0 25px #00ff88; border-color:#00ff88; }
 
 #messages {
   height: 280px;
@@ -48,7 +41,7 @@ h1 { margin-top: 15px; }
 
 .msg { margin-bottom: 6px; }
 
-input, button, select {
+input, button {
   width: 100%;
   margin-top: 10px;
   padding: 10px;
@@ -72,153 +65,174 @@ input, button, select {
 <h1>JARVIS CINEMATIC HUD</h1>
 
 <div id="hud">
-  <select id="voiceSelect"></select>
-
-  <input id="textInput" placeholder="Type a command..." />
-  <button onclick="sendText()">Send</button>
-  <button onclick="startVoice()">🎤 Tap to Talk</button>
-
+  <input id="textInput" placeholder="Awaiting command..." />
+  <button onclick="sendText()">Send Command</button>
+  <button onclick="startVoice()">🎤 Voice Command</button>
   <div id="status"></div>
   <div id="messages"></div>
 </div>
 
 <script>
-let voices = [];
+/* ================= CORE STATE ================= */
+let MODE = "ASSISTANT";
+let USER_TITLE = "Commander";
 
-/* -------- VOICES -------- */
-function loadVoices() {
-  voices = speechSynthesis.getVoices();
-  const s = document.getElementById("voiceSelect");
-  s.innerHTML = "";
-  voices.forEach((v,i)=>{
-    const o = document.createElement("option");
-    o.value=i; o.textContent=v.name;
-    s.appendChild(o);
-  });
-}
-speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
+/* ================= VOICE ================= */
+let voices=[];
+speechSynthesis.onvoiceschanged=()=>{
+  voices=speechSynthesis.getVoices();
+};
 
-/* -------- SPEAK -------- */
-function speak(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  const hud = document.getElementById("hud");
+function speak(text){
+  const u=new SpeechSynthesisUtterance(text);
+  const hud=document.getElementById("hud");
 
-  const male = voices.find(v =>
+  const male=voices.find(v =>
     v.name.toLowerCase().includes("male") ||
     v.name.toLowerCase().includes("david") ||
     v.name.toLowerCase().includes("john")
   );
 
-  u.voice = male || voices[0];
-  u.rate = 0.85;
-  u.pitch = 0.6;
-  u.volume = 1;
+  u.voice=male||voices[0];
+  u.rate=0.85;
+  u.pitch=0.6;
 
   hud.classList.add("speaking");
-  u.onend = () => hud.classList.remove("speaking");
+  u.onend=()=>hud.classList.remove("speaking");
 
   speechSynthesis.speak(u);
 }
 
-/* -------- TYPE EFFECT -------- */
-function typeReply(text) {
-  const box = document.getElementById("messages");
-  const div = document.createElement("div");
-  div.className = "msg";
-  box.appendChild(div);
-
-  let i = 0;
-  const timer = setInterval(()=>{
-    div.textContent = "JARVIS: " + text.slice(0, i++);
-    box.scrollTop = box.scrollHeight;
-    if (i > text.length) clearInterval(timer);
-  }, 25);
+/* ================= UI ================= */
+function addMsg(text,who){
+  const d=document.createElement("div");
+  d.className="msg";
+  d.textContent=who+": "+text;
+  const box=document.getElementById("messages");
+  box.appendChild(d);
+  box.scrollTop=box.scrollHeight;
 }
 
-/* -------- LOCAL COMMANDS -------- */
-function localCmd(t) {
-  t = t.toLowerCase();
-  if (t.includes("hear me")) return "Loud and clear, Commander.";
-  if (t.includes("status")) return "All systems are fully operational.";
-  if (t.includes("hello")) return "Hello, Commander. How can I assist you?";
+/* ================= TYPE EFFECT ================= */
+function typeJarvis(text){
+  const box=document.getElementById("messages");
+  const d=document.createElement("div");
+  d.className="msg";
+  box.appendChild(d);
+
+  let i=0;
+  const t=setInterval(()=>{
+    d.textContent="JARVIS: "+text.slice(0,i++);
+    box.scrollTop=box.scrollHeight;
+    if(i>text.length) clearInterval(t);
+  },25);
+}
+
+/* ================= COMMAND INTELLIGENCE ================= */
+function commandRouter(text){
+  const t=text.toLowerCase();
+
+  if(t.includes("status")){
+    return `All systems are operational, ${USER_TITLE}.`;
+  }
+
+  if(t.includes("assistant mode")){
+    MODE="ASSISTANT";
+    return "Assistant mode engaged.";
+  }
+
+  if(t.includes("analysis mode")){
+    MODE="ANALYSIS";
+    return "Analysis mode activated. Awaiting data.";
+  }
+
+  if(t.includes("standby")){
+    MODE="STANDBY";
+    return "Entering standby mode. Monitoring quietly.";
+  }
+
+  if(t.includes("can you hear me")){
+    return `Loud and clear, ${USER_TITLE}.`;
+  }
+
+  if(t.includes("who are you")){
+    return `I am JARVIS, your personal AI system.`;
+  }
+
   return null;
 }
 
-/* -------- SEND -------- */
-function sendText(fromVoice=null) {
-  const input = document.getElementById("textInput");
-  const text = fromVoice || input.value.trim();
-  if (!text) return;
+/* ================= SEND ================= */
+function sendText(fromVoice=null){
+  const input=document.getElementById("textInput");
+  const text=fromVoice||input.value.trim();
+  if(!text) return;
 
-  const box = document.getElementById("messages");
-  const u = document.createElement("div");
-  u.className="msg";
-  u.textContent="You: "+text;
-  box.appendChild(u);
-  box.scrollTop=box.scrollHeight;
+  addMsg(text,"You");
   input.value="";
 
-  const local = localCmd(text);
-  if (local) {
-    typeReply(local);
+  const local=commandRouter(text);
+  if(local){
+    typeJarvis(local);
     speak(local);
     return;
   }
 
-  document.getElementById("status").textContent="Thinking...";
+  document.getElementById("status").textContent="Processing...";
 
-  fetch("https://jarvis-backend-7ie0.onrender.com/chat", {
+  fetch("https://jarvis-backend-7ie0.onrender.com/chat",{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({message:text})
+    body:JSON.stringify({
+      message:`You are JARVIS in ${MODE} mode. Reply formally. User is Commander. Question: ${text}`
+    })
   })
   .then(r=>r.json())
   .then(d=>{
-    const reply = d.reply || "I am unable to respond right now.";
-    typeReply(reply);
+    const reply=d.reply||"I am unable to respond right now.";
+    typeJarvis(reply);
     speak(reply);
     document.getElementById("status").textContent="";
   })
   .catch(()=>{
-    const r="Backend online. Response delayed, Commander.";
-    typeReply(r); speak(r);
+    const r="Backend delay detected. Standing by.";
+    typeJarvis(r);
+    speak(r);
     document.getElementById("status").textContent="";
   });
 }
 
-/* -------- VOICE INPUT -------- */
-function startVoice() {
-  if (!("webkitSpeechRecognition" in window)) {
+/* ================= VOICE INPUT ================= */
+function startVoice(){
+  if(!("webkitSpeechRecognition"in window)){
     alert("Speech recognition not supported");
     return;
   }
 
-  const hud = document.getElementById("hud");
-  const rec = new webkitSpeechRecognition();
-  rec.lang="en-IN";
-  rec.continuous=false;
-  rec.interimResults=false;
+  const hud=document.getElementById("hud");
+  const r=new webkitSpeechRecognition();
+  r.lang="en-IN";
+  r.continuous=false;
 
   hud.classList.add("listening");
   document.getElementById("status").textContent="Listening...";
 
-  rec.onresult=e=>{
+  r.onresult=e=>{
     hud.classList.remove("listening");
     sendText(e.results[0][0].transcript);
   };
 
-  rec.onerror=()=>{
+  r.onerror=()=>{
     hud.classList.remove("listening");
     document.getElementById("status").textContent="Voice error";
   };
 
-  rec.onend=()=>{
+  r.onend=()=>{
     hud.classList.remove("listening");
     document.getElementById("status").textContent="";
   };
 
-  rec.start();
+  r.start();
 }
 </script>
 
