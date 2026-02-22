@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, "/")));
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("JARVIS backend is running");
+  res.send("JARVIS backend is Active");
 });
 
 app.get("/jarvis_cinematic.html", (req, res) => {
