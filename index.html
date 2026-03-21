@@ -77,6 +77,7 @@ camera.position.z = 5;
 
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 // ---------------- HOLOGRAM ----------------
@@ -166,7 +167,7 @@ function processCommand(command){
 async function sendCommandToJarvis(command) {
 
     try {
-        const res = await fetch("fetch("https://jarvis-backend-1-m4i2.onrender.com/command", {  
+        const res = await fetch("fetch("https://jarvis-backend-1-m4i2.onrender.com/command", { 
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({command})
