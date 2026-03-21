@@ -166,7 +166,7 @@ function processCommand(command){
 async function sendCommandToJarvis(command) {
 
     try {
-        const res = await fetch("http://192.168.X.X:3000/command", {
+        const res = await fetch("fetch("https://your-backend.onrender.com/command", {
             method: "POST",
             headers: {"Content-Type":"application/json"},
             body: JSON.stringify({command})
