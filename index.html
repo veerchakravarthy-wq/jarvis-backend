@@ -233,32 +233,106 @@ function getOfflineResponse(command){
         return "Fullscreen activated.";
     }
 
-    // Apps
-    if(command.includes("open youtube")){
-        window.open("https://youtube.com");
-        return "Opening YouTube.";
+    
+// ---------------- APP LAUNCH SYSTEM ----------------
+if(command.includes("open youtube")){
+    window.open("https://youtube.com");
+    return "Opening YouTube.";
+}
+
+if(command.includes("open google") || command.includes("open chrome")){
+    window.open("https://google.com");
+    return "Opening Google.";
+}
+
+if(command.includes("open maps") || command.includes("open google maps")){
+    window.open("https://maps.google.com");
+    return "Opening Google Maps.";
+}
+
+if(command.includes("open gmail")){
+    window.open("https://mail.google.com");
+    return "Opening Gmail.";
+}
+
+if(command.includes("open github")){
+    window.open("https://github.com");
+    return "Opening GitHub.";
+}
+
+if(command.includes("open whatsapp")){
+    window.open("https://web.whatsapp.com");
+    return "Opening WhatsApp Web.";
+}
+
+if(command.includes("open instagram")){
+    window.open("https://instagram.com");
+    return "Opening Instagram.";
+}
+
+if(command.includes("open facebook")){
+    window.open("https://facebook.com");
+    return "Opening Facebook.";
+}
+
+if(command.includes("open twitter") || command.includes("open x")){
+    window.open("https://x.com");
+    return "Opening X.";
+}
+
+if(command.includes("open linkedin")){
+    window.open("https://linkedin.com");
+    return "Opening LinkedIn.";
+}
+
+if(command.includes("open amazon")){
+    window.open("https://amazon.in");
+    return "Opening Amazon.";
+}
+
+if(command.includes("open flipkart")){
+    window.open("https://flipkart.com");
+    return "Opening Flipkart.";
+}
+
+if(command.includes("open netflix")){
+    window.open("https://netflix.com");
+    return "Opening Netflix.";
+}
+
+if(command.includes("open spotify")){
+    window.open("https://spotify.com");
+    return "Opening Spotify.";
+}
+    
+    // ---------------- SMART SEARCH ----------------
+if(command.startsWith("search")){
+
+    let query = command.replace("search", "").trim();
+
+    if(query.length > 0){
+        let url = "https://www.google.com/search?q=" + encodeURIComponent(query);
+        window.open(url);
+        return "Searching for " + query;
     }
 
-    if(command.includes("open google")){
-        window.open("https://google.com");
-        return "Opening Google.";
+    return "What should I search, Commander?";
+}
+    
+    // ---------------- PLAY MEDIA ----------------
+if(command.includes("play")){
+
+    let song = command.replace("play", "").trim();
+
+    if(song.length > 0){
+        let url = "https://www.youtube.com/results?search_query=" + encodeURIComponent(song);
+        window.open(url);
+        return "Playing " + song + " on YouTube.";
     }
 
-    if(command.includes("open maps")){
-        window.open("https://maps.google.com");
-        return "Opening Maps.";
-    }
-
-    if(command.includes("open gmail")){
-        window.open("https://mail.google.com");
-        return "Opening Gmail.";
-    }
-
-    if(command.includes("open github")){
-        window.open("https://github.com");
-        return "Opening GitHub.";
-    }
-
+    return "Please specify what to play.";
+}
+    
     // Control Engine
     if(command.includes("stop")){
         running = false;
