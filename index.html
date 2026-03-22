@@ -69,6 +69,10 @@ button {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
+    
+    let userName = localStorage.getItem("jarvis_user") || "";
+    let lastCommand = "";
+    
 // ---------------- SCENE ----------------
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
@@ -147,7 +151,11 @@ function manualCommand(){
 }
 
 // ---------------- VOICE INPUT ----------------
+
+let recognition;
+
 function startListening(){
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if(!SpeechRecognition){
@@ -155,25 +163,32 @@ function startListening(){
         return;
     }
 
-    const recognition = new SpeechRecognition();
+    recognition = new SpeechRecognition();
     recognition.lang = "en-US";
+    recognition.continuous = true;
 
-    document.getElementById("statusText").innerText = "Listening...";
     recognition.start();
 
+    document.getElementById("statusText").innerText = "JARVIS listening...";
+
     recognition.onresult = function(event){
-        let command = event.results[0][0].transcript.toLowerCase();
-        document.getElementById("statusText").innerText = "You said: " + command;
+        let command = event.results[event.results.length - 1][0].transcript.toLowerCase();
         processCommand(command);
     };
 
     recognition.onerror = function(){
-        updateResponse("Voice recognition error");
+        recognition.start();
+    };
+
+    recognition.onend = function(){
+        recognition.start(); // auto-restart
     };
 }
-
+    
 // ---------------- COMMAND PROCESS ----------------
 function processCommand(command){
+
+    lastCommand = command;
 
     document.getElementById("statusText").innerText = "Analyzing...";
 
@@ -183,6 +198,34 @@ function processCommand(command){
 
 // ---------------- ADVANCED SYSTEM CONTROL ----------------
 function getOfflineResponse(command){
+
+    // ---------------- MEMORY ----------------
+if(command.includes("my name is")){
+    userName = command.replace("my name is", "").trim();
+    localStorage.setItem("jarvis_user", userName);
+    return "Nice to meet you " + userName;
+}
+
+if(command.includes("what is my name")){
+    if(userName){
+        return "Your name is " + userName;
+    }
+    return "I do not know your name yet.";
+}
+
+if(command.includes("remember this")){
+    let note = command.replace("remember this", "").trim();
+    localStorage.setItem("jarvis_note", note);
+    return "I will remember that.";
+}
+
+if(command.includes("what did i say")){
+    let note = localStorage.getItem("jarvis_note");
+    if(note){
+        return "You told me " + note;
+    }
+    return "No memory found.";
+}
 
     // Greetings
     if(command.includes("hello") || command.includes("hi")){
@@ -420,6 +463,11 @@ window.addEventListener('resize', ()=>{
     camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
 });
+    window.onload = () => {
+    setTimeout(() => {
+        startListening();
+    }, 2000);
+};
 </script>
 
 </body>
