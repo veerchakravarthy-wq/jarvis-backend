@@ -159,21 +159,37 @@ function startListening(){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if(!SpeechRecognition){
-        alert("Voice not supported");
+        updateResponse("Voice not supported");
         return;
     }
 
     recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
     recognition.continuous = true;
+    recognition.lang = "en-US";
 
     recognition.start();
 
-    document.getElementById("statusText").innerText = "JARVIS listening...";
+    document.getElementById("statusText").innerText = "Listening for wake word...";
 
     recognition.onresult = function(event){
-        let command = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        processCommand(command);
+
+        let transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+
+        console.log("Heard:", transcript);
+
+        // 🔥 WAKE WORD DETECTION
+        if(transcript.includes("hey jarvis")){
+
+            let command = transcript.replace("hey jarvis", "").trim();
+
+            // If user only says "hey jarvis"
+            if(command.length === 0){
+                updateResponse("Yes Commander, I'm listening.");
+                return;
+            }
+
+            processCommand(command);
+        }
     };
 
     recognition.onerror = function(){
@@ -181,7 +197,7 @@ function startListening(){
     };
 
     recognition.onend = function(){
-        recognition.start(); // auto-restart
+        recognition.start();
     };
 }
     
@@ -190,7 +206,7 @@ function processCommand(command){
 
     lastCommand = command;
 
-    document.getElementById("statusText").innerText = "Analyzing...";
+    document.getElementById("statusText").innerText = "Processing command...";
 
     const reply = getOfflineResponse(command);
     updateResponse(reply);
