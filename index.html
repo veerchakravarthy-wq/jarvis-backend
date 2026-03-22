@@ -27,6 +27,8 @@ body {
     transform: translateX(-50%);
     color: cyan;
     text-shadow: 0 0 10px cyan;
+    text-align: center;
+    width: 90%;
 }
 
 #overlay {
@@ -37,25 +39,17 @@ body {
     background: radial-gradient(circle, transparent 60%, rgba(0,255,255,0.1));
 }
 
-#cmdBtn {
+button {
     position: absolute;
     bottom: 20px;
-    left: 20px;
     padding: 10px;
     background: black;
     color: cyan;
     border: 1px solid cyan;
 }
 
-#voiceBtn {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    padding: 10px;
-    background: black;
-    color: cyan;
-    border: 1px solid cyan;
-}
+#cmdBtn { left: 20px; }
+#voiceBtn { right: 20px; }
 </style>
 </head>
 
@@ -144,7 +138,7 @@ setInterval(()=>{
         new Date().toLocaleTimeString();
 },1000);
 
-// ---------------- MANUAL COMMAND ----------------
+// ---------------- MANUAL INPUT ----------------
 function manualCommand(){
     let cmd = prompt("Enter Command:");
     if(cmd){
@@ -157,7 +151,7 @@ function startListening(){
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if(!SpeechRecognition){
-        alert("Voice not supported on this device");
+        alert("Voice not supported");
         return;
     }
 
@@ -165,7 +159,6 @@ function startListening(){
     recognition.lang = "en-US";
 
     document.getElementById("statusText").innerText = "Listening...";
-
     recognition.start();
 
     recognition.onresult = function(event){
@@ -181,24 +174,36 @@ function startListening(){
 
 // ---------------- COMMAND PROCESS ----------------
 function processCommand(command){
-    document.getElementById("statusText").innerText = "Analyzing...";
 
-    if(command.includes("stop")) running = false;
-    else if(command.includes("start")) running = true;
-    else if(command.includes("fast")) speed = 0.05;
-    else if(command.includes("slow")) speed = 0.005;
+    document.getElementById("statusText").innerText = "Analyzing...";
 
     const reply = getOfflineResponse(command);
     updateResponse(reply);
 }
 
-// ---------------- SMART OFFLINE AI ----------------
+// ---------------- ADVANCED SYSTEM CONTROL ----------------
 function getOfflineResponse(command){
 
+    // Greetings
     if(command.includes("hello") || command.includes("hi")){
-        return "Hello Commander";
+        return "Hello Commander. Systems online.";
     }
 
+    // System
+    if(command.includes("system status")){
+        return "All systems are fully operational.";
+    }
+
+    if(command.includes("diagnostics")){
+        return "Running diagnostics. All modules functioning normally.";
+    }
+
+    if(command.includes("performance")){
+        speed = 0.05;
+        return "Performance mode activated.";
+    }
+
+    // Time
     if(command.includes("time")){
         return "Current time is " + new Date().toLocaleTimeString();
     }
@@ -207,59 +212,117 @@ function getOfflineResponse(command){
         return "Today's date is " + new Date().toDateString();
     }
 
-    if(command.includes("how many countries")){
-        return "There are approximately 195 countries in the world";
+    // Device
+    if(command.includes("battery")){
+        if(navigator.getBattery){
+            navigator.getBattery().then(battery=>{
+                updateResponse("Battery level is " + Math.round(battery.level*100) + "%");
+            });
+            return "Checking battery...";
+        }
+        return "Battery info not supported.";
     }
 
-    if(command.includes("national animal")){
-        return "The national animal of India is the Tiger";
+    if(command.includes("vibrate")){
+        navigator.vibrate(500);
+        return "Vibration activated.";
     }
 
-    if(command.includes("prime minister")){
-        return "The Prime Minister of India is Narendra Modi";
+    if(command.includes("fullscreen")){
+        document.documentElement.requestFullscreen();
+        return "Fullscreen activated.";
     }
 
-    if(command.includes("what is ai")){
-        return "Artificial Intelligence is the simulation of human intelligence in machines";
-    }
-
+    // Apps
     if(command.includes("open youtube")){
         window.open("https://youtube.com");
-        return "Opening YouTube";
+        return "Opening YouTube.";
     }
 
     if(command.includes("open google")){
         window.open("https://google.com");
-        return "Opening Google";
+        return "Opening Google.";
     }
 
+    if(command.includes("open maps")){
+        window.open("https://maps.google.com");
+        return "Opening Maps.";
+    }
+
+    if(command.includes("open gmail")){
+        window.open("https://mail.google.com");
+        return "Opening Gmail.";
+    }
+
+    if(command.includes("open github")){
+        window.open("https://github.com");
+        return "Opening GitHub.";
+    }
+
+    // Control Engine
+    if(command.includes("stop")){
+        running = false;
+        return "System paused.";
+    }
+
+    if(command.includes("start")){
+        running = true;
+        return "System resumed.";
+    }
+
+    if(command.includes("fast")){
+        speed = 0.05;
+        return "Speed increased.";
+    }
+
+    if(command.includes("slow")){
+        speed = 0.005;
+        return "Speed reduced.";
+    }
+
+    // Knowledge
+    if(command.includes("how many countries")){
+        return "There are approximately 195 countries.";
+    }
+
+    if(command.includes("prime minister")){
+        return "The Prime Minister of India is Narendra Modi.";
+    }
+
+    if(command.includes("what is ai")){
+        return "Artificial Intelligence is the simulation of human intelligence in machines.";
+    }
+
+    // Identity
     if(command.includes("who are you")){
-        return "I am JARVIS, your intelligent assistant";
+        return "I am JARVIS, your advanced assistant.";
     }
 
     return generateSmartReply(command);
 }
 
+// ---------------- SMART REPLY ----------------
 function generateSmartReply(command){
     if(command.includes("what") || command.includes("why")){
-        return "That is an interesting question, Commander. I am still learning.";
+        return "That requires deeper intelligence. Expanding capabilities.";
     }
 
     if(command.includes("how")){
-        return "Analyzing... I will improve my knowledge over time.";
+        return "Analyzing. I will improve my responses over time.";
     }
 
-    return "Command received, Commander.";
+    if(command.includes("help")){
+        return "You can ask for system status, open apps, or control device.";
+    }
+
+    return "Command acknowledged.";
 }
 
 // ---------------- VOICE OUTPUT ----------------
 function speak(text){
     const speech = new SpeechSynthesisUtterance(text);
-
-    speech.lang = "en-US";
-    speech.pitch = 0.8;   // deeper voice
-    speech.rate = 0.9;    // slower = robotic feel
-
+    speech.pitch = 0.8;
+    speech.rate = 0.9;
     window.speechSynthesis.speak(speech);
 }
 
