@@ -47,7 +47,27 @@ button {
     color: cyan;
     border: 1px solid cyan;
 }
+    
+/* ---------------- UI STATES ---------------- */
 
+.listening {
+    box-shadow: 0 0 40px cyan, inset 0 0 20px cyan;
+}
+
+.thinking {
+    animation: pulse 1s infinite;
+}
+
+.speaking {
+    box-shadow: 0 0 40px lime, inset 0 0 20px lime;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 10px purple; }
+    50% { box-shadow: 0 0 40px magenta; }
+    100% { box-shadow: 0 0 10px purple; }
+}
+    
 #cmdBtn { left: 20px; }
 #voiceBtn { right: 20px; }
 </style>
@@ -90,6 +110,7 @@ const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(1,32,32),
     new THREE.MeshBasicMaterial({color:0x00ffff, wireframe:true, opacity:0.7, transparent:true})
 );
+    sphere.name = "jarvisCore";
 scene.add(sphere);
 
 const ring = new THREE.Mesh(
@@ -141,7 +162,7 @@ setInterval(()=>{
     document.getElementById("time").innerText =
         new Date().toLocaleTimeString();
 },1000);
-
+    
 // ---------------- MANUAL INPUT ----------------
 function manualCommand(){
     let cmd = prompt("Enter Command:");
@@ -150,6 +171,28 @@ function manualCommand(){
     }
 }
 
+    // -------------UI STATE-------------
+    function setState(state){
+
+    const core = scene.getObjectByName("jarvisCore");
+
+    if(!core) return;
+
+    core.material.color.set(0x00ffff); // default
+
+    if(state === "listening"){
+        core.material.color.set(0x00ffff);
+    }
+
+    if(state === "thinking"){
+        core.material.color.set(0xff00ff);
+    }
+
+    if(state === "speaking"){
+        core.material.color.set(0x00ff00);
+    }
+}
+    
 // ---------------- VOICE INPUT ----------------
 
 let recognition;
@@ -168,6 +211,7 @@ function startListening(){
     recognition.lang = "en-US";
 
     recognition.start();
+    setState("listening");
 
     document.getElementById("statusText").innerText = "Listening for wake word...";
 
@@ -205,6 +249,7 @@ function startListening(){
 function processCommand(command){
 
     lastCommand = command;
+    setState("thinking");
 
     document.getElementById("statusText").innerText = "Processing command...";
 
@@ -469,7 +514,8 @@ function speak(text){
 
 // ---------------- RESPONSE ----------------
 function updateResponse(text){
-    document.getElementById("statusText").innerText = text;
+    setState("speaking");
+    document.getElementById("statusText").innerText = "Listening for wake word...";
     speak(text);
 }
 
