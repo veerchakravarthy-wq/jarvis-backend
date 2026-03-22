@@ -319,18 +319,26 @@ if(command.startsWith("search")){
     return "What should I search, Commander?";
 }
     
-    // ---------------- PLAY MEDIA ----------------
+    // ---------------- SMART PLAY (BETTER) ----------------
 if(command.includes("play")){
 
-    let song = command.replace("play", "").trim();
+    let song = command
+        .replace("open youtube", "")
+        .replace("play", "")
+        .replace("song", "")
+        .trim();
 
     if(song.length > 0){
+
         let url = "https://www.youtube.com/results?search_query=" + encodeURIComponent(song);
+
+        // Open search first
         window.open(url);
+
         return "Playing " + song + " on YouTube.";
     }
 
-    return "Please specify what to play.";
+    return "Which song should I play, Commander?";
 }
     
     // Control Engine
