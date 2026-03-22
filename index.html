@@ -12,7 +12,6 @@ body {
     font-family: Arial;
 }
 
-/* HUD */
 #hud {
     position: absolute;
     top: 20px;
@@ -21,7 +20,6 @@ body {
     text-shadow: 0 0 10px cyan;
 }
 
-/* Status */
 #statusText {
     position: absolute;
     bottom: 20px;
@@ -31,7 +29,6 @@ body {
     text-shadow: 0 0 10px cyan;
 }
 
-/* Overlay */
 #overlay {
     position: absolute;
     width: 100%;
@@ -40,12 +37,21 @@ body {
     background: radial-gradient(circle, transparent 60%, rgba(0,255,255,0.1));
 }
 
-/* Button */
 #cmdBtn {
     position: absolute;
     bottom: 20px;
     left: 20px;
-    padding: 10px 15px;
+    padding: 10px;
+    background: black;
+    color: cyan;
+    border: 1px solid cyan;
+}
+
+#voiceBtn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 10px;
     background: black;
     color: cyan;
     border: 1px solid cyan;
@@ -62,7 +68,9 @@ body {
 
 <div id="statusText">Ready for command</div>
 <div id="overlay"></div>
+
 <button id="cmdBtn" onclick="manualCommand()">Command</button>
+<button id="voiceBtn" onclick="startListening()">🎤 Speak</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -71,76 +79,58 @@ body {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
 camera.position.z = 5;
 
-// Renderer FIXED
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio); // FIX
+renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 // ---------------- HOLOGRAM ----------------
 const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(1, 32, 32),
-    new THREE.MeshBasicMaterial({
-        color: 0x00ffff,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.7
-    })
+    new THREE.SphereGeometry(1,32,32),
+    new THREE.MeshBasicMaterial({color:0x00ffff, wireframe:true, opacity:0.7, transparent:true})
 );
 scene.add(sphere);
 
-// Ring
 const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(1.5, 0.02, 16, 100),
-    new THREE.MeshBasicMaterial({ color: 0x00ffff })
+    new THREE.TorusGeometry(1.5,0.02,16,100),
+    new THREE.MeshBasicMaterial({color:0x00ffff})
 );
 scene.add(ring);
 
 // ---------------- PARTICLES ----------------
 const particlesGeometry = new THREE.BufferGeometry();
 const count = 800;
-const posArray = new Float32Array(count * 3);
+const posArray = new Float32Array(count*3);
 
-for (let i = 0; i < count * 3; i++) {
-    posArray[i] = (Math.random() - 0.5) * 8;
+for(let i=0;i<count*3;i++){
+    posArray[i] = (Math.random()-0.5)*8;
 }
 
-particlesGeometry.setAttribute(
-    'position',
-    new THREE.BufferAttribute(posArray, 3)
+particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray,3));
+
+const particles = new THREE.Points(
+    particlesGeometry,
+    new THREE.PointsMaterial({size:0.03, color:0x00ffff})
 );
-
-const particlesMaterial = new THREE.PointsMaterial({
-    size: 0.03,
-    color: 0x00ffff
-});
-
-const particles = new THREE.Points(particlesGeometry, particlesMaterial);
 scene.add(particles);
 
 // ---------------- ANIMATION ----------------
 let speed = 0.01;
 let running = true;
 
-function animate() {
+function animate(){
     requestAnimationFrame(animate);
 
-    if (running) {
+    if(running){
         sphere.rotation.y += speed;
         ring.rotation.x += speed;
         ring.rotation.y += speed;
-        particles.rotation.y += speed / 2;
+        particles.rotation.y += speed/2;
 
-        // breathing effect
-        const scale = 1 + Math.sin(Date.now() * 0.002) * 0.05;
+        const scale = 1 + Math.sin(Date.now()*0.002)*0.05;
         sphere.scale.set(scale, scale, scale);
     }
 
@@ -149,73 +139,140 @@ function animate() {
 animate();
 
 // ---------------- TIME ----------------
-setInterval(() => {
+setInterval(()=>{
     document.getElementById("time").innerText =
         new Date().toLocaleTimeString();
-}, 1000);
+},1000);
 
-// ---------------- COMMAND ----------------
-function manualCommand() {
+// ---------------- MANUAL COMMAND ----------------
+function manualCommand(){
     let cmd = prompt("Enter Command:");
-    if (cmd) {
+    if(cmd){
         processCommand(cmd.toLowerCase());
     }
 }
 
-function processCommand(command) {
-    document.getElementById("statusText").innerText = "Analyzing command...";
+// ---------------- VOICE INPUT ----------------
+function startListening(){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (command.includes("stop")) running = false;
-    else if (command.includes("start")) running = true;
-    else if (command.includes("fast")) speed = 0.05;
-    else if (command.includes("slow")) speed = 0.005;
+    if(!SpeechRecognition){
+        alert("Voice not supported on this device");
+        return;
+    }
 
-    sendCommandToJarvis(command);
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+
+    document.getElementById("statusText").innerText = "Listening...";
+
+    recognition.start();
+
+    recognition.onresult = function(event){
+        let command = event.results[0][0].transcript.toLowerCase();
+        document.getElementById("statusText").innerText = "You said: " + command;
+        processCommand(command);
+    };
+
+    recognition.onerror = function(){
+        updateResponse("Voice recognition error");
+    };
 }
 
-// ---------------- AI CONNECTION ----------------
-async function sendCommandToJarvis(command) {
-    try {
-        const res = await fetch("https://jarvis-backend-7ie0.onrender.com/command", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ command })
-        });
+// ---------------- COMMAND PROCESS ----------------
+function processCommand(command){
+    document.getElementById("statusText").innerText = "Analyzing...";
 
-        const data = await res.json();
-        updateResponse(data.reply);
+    if(command.includes("stop")) running = false;
+    else if(command.includes("start")) running = true;
+    else if(command.includes("fast")) speed = 0.05;
+    else if(command.includes("slow")) speed = 0.005;
 
-    } catch (err) {
-        console.error(err);
+    const reply = getOfflineResponse(command);
+    updateResponse(reply);
+}
 
-        // fallback
-        let reply = "Connection error. Switching to offline mode.";
+// ---------------- SMART OFFLINE AI ----------------
+function getOfflineResponse(command){
 
-        if (command.includes("hello")) reply = "Hello Commander";
-        else if (command.includes("time")) reply = new Date().toLocaleTimeString();
-        else if (command.includes("date")) reply = new Date().toDateString();
-
-        updateResponse(reply);
+    if(command.includes("hello") || command.includes("hi")){
+        return "Hello Commander";
     }
+
+    if(command.includes("time")){
+        return "Current time is " + new Date().toLocaleTimeString();
+    }
+
+    if(command.includes("date")){
+        return "Today's date is " + new Date().toDateString();
+    }
+
+    if(command.includes("how many countries")){
+        return "There are approximately 195 countries in the world";
+    }
+
+    if(command.includes("national animal")){
+        return "The national animal of India is the Tiger";
+    }
+
+    if(command.includes("prime minister")){
+        return "The Prime Minister of India is Narendra Modi";
+    }
+
+    if(command.includes("what is ai")){
+        return "Artificial Intelligence is the simulation of human intelligence in machines";
+    }
+
+    if(command.includes("open youtube")){
+        window.open("https://youtube.com");
+        return "Opening YouTube";
+    }
+
+    if(command.includes("open google")){
+        window.open("https://google.com");
+        return "Opening Google";
+    }
+
+    if(command.includes("who are you")){
+        return "I am JARVIS, your intelligent assistant";
+    }
+
+    return generateSmartReply(command);
+}
+
+function generateSmartReply(command){
+    if(command.includes("what") || command.includes("why")){
+        return "That is an interesting question, Commander. I am still learning.";
+    }
+
+    if(command.includes("how")){
+        return "Analyzing... I will improve my knowledge over time.";
+    }
+
+    return "Command received, Commander.";
+}
+
+// ---------------- VOICE OUTPUT ----------------
+function speak(text){
+    const speech = new SpeechSynthesisUtterance(text);
+
+    speech.lang = "en-US";
+    speech.pitch = 0.8;   // deeper voice
+    speech.rate = 0.9;    // slower = robotic feel
+
+    window.speechSynthesis.speak(speech);
 }
 
 // ---------------- RESPONSE ----------------
-function updateResponse(text) {
+function updateResponse(text){
     document.getElementById("statusText").innerText = text;
     speak(text);
 }
 
-// ---------------- VOICE ----------------
-function speak(text) {
-    const speech = new SpeechSynthesisUtterance(text);
-    speech.lang = "en-US";
-    window.speechSynthesis.speak(speech);
-}
-
 // ---------------- RESIZE ----------------
-window.addEventListener('resize', () => {
+window.addEventListener('resize', ()=>{
     renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
 });
 </script>
