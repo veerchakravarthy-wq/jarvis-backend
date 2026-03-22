@@ -1,12 +1,11 @@
 import express from "express";
 import cors from "cors";
-import fetch from "node-fetch";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const API_KEY = "YOUR_OPENAI_API_KEY";
+const API_KEY = process.env.OPENAI_API_KEY;
 
 app.post("/command", async (req, res) => {
     const userCommand = req.body.command;
@@ -21,7 +20,7 @@ app.post("/command", async (req, res) => {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [
-                    { role: "system", content: "You are JARVIS, a smart AI assistant." },
+                    { role: "system", content: "You are JARVIS, an AI assistant." },
                     { role: "user", content: userCommand }
                 ]
             })
@@ -29,12 +28,15 @@ app.post("/command", async (req, res) => {
 
         const data = await response.json();
 
-        const reply = data.choices[0].message.content;
+        console.log("AI RESPONSE:", data); // DEBUG
+
+        const reply = data.choices?.[0]?.message?.content || "No response from AI";
 
         res.json({ reply });
 
     } catch (error) {
-        res.json({ reply: "Error connecting to AI" });
+        console.error("ERROR:", error);
+        res.json({ reply: "Backend error connecting to AI" });
     }
 });
 
