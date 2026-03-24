@@ -30,6 +30,33 @@ body {
     text-align: center;
     width: 90%;
 }
+    #topBar {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    text-align: center;
+    color: cyan;
+    padding: 5px;
+    border-bottom: 1px solid cyan;
+    text-shadow: 0 0 10px cyan;
+}
+
+    <!-- ---------------- HUD DASHBOARD ---------------- -->
+
+<div id="leftPanel">
+    <h3>SYSTEM</h3>
+    <button onclick="processCommand('system status')">Status</button>
+    <button onclick="processCommand('diagnostics')">Diagnostics</button>
+    <button onclick="processCommand('battery')">Battery</button>
+    <button onclick="processCommand('vibrate')">Vibrate</button>
+</div>
+
+<div id="rightPanel">
+    <h3>APPS</h3>
+    <button onclick="processCommand('open youtube')">YouTube</button>
+    <button onclick="processCommand('open google')">Google</button>
+    <button onclick="processCommand('open whatsapp')">WhatsApp</button>
+</div>
 
 #overlay {
     position: absolute;
@@ -47,7 +74,45 @@ button {
     color: cyan;
     border: 1px solid cyan;
 }
+
+    <div id="topBar">
+    <span id="systemStatus">SYSTEM: ONLINE</span>
+</div>
     
+    /* ---------------- HUD PANELS ---------------- */
+
+#leftPanel, #rightPanel {
+    position: absolute;
+    top: 80px;
+    width: 150px;
+    padding: 10px;
+    color: cyan;
+    text-shadow: 0 0 10px cyan;
+}
+
+#leftPanel {
+    left: 10px;
+}
+
+#rightPanel {
+    right: 10px;
+}
+
+#leftPanel button, #rightPanel button {
+    display: block;
+    width: 100%;
+    margin: 5px 0;
+    padding: 5px;
+    background: black;
+    color: cyan;
+    border: 1px solid cyan;
+    cursor: pointer;
+}
+
+#leftPanel button:hover, #rightPanel button:hover {
+    background: cyan;
+    color: black;
+}
 /* ---------------- UI STATES ---------------- */
 
 .listening {
@@ -244,6 +309,10 @@ function startListening(){
         recognition.start();
     };
 }
+// --------------- SYSTEM STATUS ---------------
+    function updateSystemStatus(text){
+    document.getElementById("systemStatus").innerText = text;
+}
     
 // ---------------- COMMAND PROCESS ----------------
 function processCommand(command){
@@ -273,7 +342,12 @@ if(command.includes("what is my name")){
     }
     return "I do not know your name yet.";
 }
-
+    
+    if(command.includes("system status")){
+    updateSystemStatus("SYSTEM: ALL SYSTEMS OPERATIONAL");
+    return "All systems are operational.";
+}
+    
 if(command.includes("remember this")){
     let note = command.replace("remember this", "").trim();
     localStorage.setItem("jarvis_note", note);
