@@ -49,23 +49,6 @@ body {
     text-shadow: 0 0 10px cyan;
 }
 
-    <!-- ---------------- HUD DASHBOARD ---------------- -->
-
-<div id="leftPanel">
-    <h3>SYSTEM</h3>
-    <button onclick="processCommand('system status')">Status</button>
-    <button onclick="processCommand('diagnostics')">Diagnostics</button>
-    <button onclick="processCommand('battery')">Battery</button>
-    <button onclick="processCommand('vibrate')">Vibrate</button>
-</div>
-
-<div id="rightPanel">
-    <h3>APPS</h3>
-    <button onclick="processCommand('open youtube')">YouTube</button>
-    <button onclick="processCommand('open google')">Google</button>
-    <button onclick="processCommand('open whatsapp')">WhatsApp</button>
-</div>
-
 #overlay {
     position: absolute;
     width: 100%;
@@ -74,7 +57,7 @@ body {
     background: radial-gradient(circle, transparent 60%, rgba(0,255,255,0.1));
 }
 
-button {
+#button {
     position: absolute;
     bottom: 20px;
     padding: 6px;
@@ -94,16 +77,17 @@ button {
     top: 60px;
     width: 150px;
     padding: 10px;
+    z-index: 10;
     color: cyan;
     text-shadow: 0 0 10px cyan;
 }
 
 #leftPanel {
-    left: 5px;
+    left: 10px;
 }
 
 #rightPanel {
-    right: 5px;
+    right: 10px;
 }
 
 #leftPanel button, #rightPanel button {
@@ -153,6 +137,23 @@ button {
     <div>JARVIS SYSTEM ACTIVE</div>
 </div>
 
+<!-- ---------------- HUD DASHBOARD ---------------- -->
+
+<div id="leftPanel">
+    <h3>SYSTEM</h3>
+    <button onclick="processCommand('system status')">Status</button>
+    <button onclick="processCommand('diagnostics')">Diagnostics</button>
+    <button onclick="processCommand('battery')">Battery</button>
+    <button onclick="processCommand('vibrate')">Vibrate</button>
+</div>
+
+<div id="rightPanel">
+    <h3>APPS</h3>
+    <button onclick="processCommand('open youtube')">YouTube</button>
+    <button onclick="processCommand('open google')">Google</button>
+    <button onclick="processCommand('open whatsapp')">WhatsApp</button>
+</div>
+    
 <div id="statusText">Ready for command</div>
 <div id="overlay"></div>
 
