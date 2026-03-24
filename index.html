@@ -30,6 +30,14 @@ body {
     text-align: center;
     width: 90%;
 }
+    
+#canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+    
     #topBar {
     position: absolute;
     top: 0;
@@ -69,7 +77,7 @@ body {
 button {
     position: absolute;
     bottom: 20px;
-    padding: 10px;
+    padding: 6px;
     background: black;
     color: cyan;
     border: 1px solid cyan;
@@ -83,7 +91,7 @@ button {
 
 #leftPanel, #rightPanel {
     position: absolute;
-    top: 80px;
+    top: 60px;
     width: 150px;
     padding: 10px;
     color: cyan;
@@ -91,11 +99,11 @@ button {
 }
 
 #leftPanel {
-    left: 10px;
+    left: 5px;
 }
 
 #rightPanel {
-    right: 10px;
+    right: 5px;
 }
 
 #leftPanel button, #rightPanel button {
