@@ -55,8 +55,33 @@ body {
     height: 100%;
     pointer-events: none;
     background: radial-gradient(circle, transparent 60%, rgba(0,255,255,0.1));
+} 
+/* ---------- Buttons ----------- */
+    #leftPanel button, #rightPanel button {
+    width: 100%;
+    margin: 6px 0;
+    padding: 6px;
+
+    background: black;
+    color: cyan;
+
+    border: 1px solid cyan;
+    border-radius: 5px;
+
+    cursor: pointer;
+
+    transition: all 0.3s ease;
 }
 
+/* 🔥 Hover Effect */
+#leftPanel button:hover, #rightPanel button:hover {
+    background: cyan;
+    color: black;
+
+    box-shadow: 0 0 15px cyan;
+    transform: scale(1.05);
+}
+    
 #button {
     position: absolute;
     bottom: 20px;
@@ -70,41 +95,65 @@ body {
     <span id="systemStatus">SYSTEM: ONLINE</span>
 </div>
     
-    /* ---------------- HUD PANELS ---------------- */
-
+    /* ===== HUD PANELS ===== */
 #leftPanel, #rightPanel {
     position: absolute;
     top: 60px;
-    width: 150px;
-    padding: 10px;
+    width: 160px;
+    padding: 15px;
     z-index: 10;
     color: cyan;
     text-shadow: 0 0 10px cyan;
-}
 
-#leftPanel {
-    left: 10px;
-}
-
-#rightPanel {
-    right: 10px;
-}
-
-#leftPanel button, #rightPanel button {
-    display: block;
-    width: 100%;
-    margin: 5px 0;
-    padding: 5px;
-    background: black;
-    color: cyan;
     border: 1px solid cyan;
-    cursor: pointer;
+    border-radius: 10px;
+
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+
+    box-shadow: 0 0 10px cyan, inset 0 0 10px cyan;
+
+    animation: panelGlow 2s infinite alternate;
 }
 
-#leftPanel button:hover, #rightPanel button:hover {
-    background: cyan;
-    color: black;
+/* Position */
+#leftPanel { left: 10px; }
+#rightPanel { right: 10px; }
+
+/* ===== PANEL GLOW ANIMATION ===== */
+@keyframes panelGlow {
+    0% {
+        box-shadow: 0 0 5px cyan, inset 0 0 5px cyan;
+    }
+    100% {
+        box-shadow: 0 0 20px cyan, inset 0 0 15px cyan;
+    }
 }
+
+    /* --------------- SCAN EFFECT -------------- */
+    #leftPanel::before, #rightPanel::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: linear-gradient(
+        transparent,
+        rgba(0,255,255,0.2),
+        transparent
+    );
+
+    animation: scan 3s linear infinite;
+}
+
+@keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+    
 /* ---------------- UI STATES ---------------- */
 
 .listening {
@@ -326,13 +375,14 @@ function startListening(){
 // ---------------- COMMAND PROCESS ----------------
 function processCommand(command){
 
-    lastCommand = command;
-    setState("thinking");
-
-    document.getElementById("statusText").innerText = "Processing command...";
-
-    const reply = getOfflineResponse(command);
-    updateResponse(reply);
+    function flashPanel() {
+    const panels = document.querySelectorAll("#leftPanel, #rightPanel");
+    panels.forEach(panel => {
+        panel.style.boxShadow = "0 0 40px lime";
+        setTimeout(() => {
+            panel.style.boxShadow = "0 0 10px cyan, inset 0 0 10px cyan";
+        }, 300);
+    });
 }
 
 // ---------------- ADVANCED SYSTEM CONTROL ----------------
