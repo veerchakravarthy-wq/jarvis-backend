@@ -189,6 +189,8 @@ canvas {
 <!-- ---------------- HUD DASHBOARD ---------------- -->
 
 <div id="leftPanel">
+    <p id="cpu">CPU: --</p>
+<p id="ram">RAM: --</p>
     <h3>SYSTEM</h3>
     <button onclick="processCommand('system status')">Status</button>
     <button onclick="processCommand('diagnostics')">Diagnostics</button>
@@ -220,6 +222,17 @@ canvas {
         },300);
     });
 }
+    setInterval(()=>{
+
+    if(performance.memory){
+        let ram = (performance.memory.usedJSHeapSize / 1048576).toFixed(2);
+        document.getElementById("ram").innerText = "RAM: " + ram + " MB";
+    }
+
+    let cpu = Math.random()*100;
+    document.getElementById("cpu").innerText = "CPU: " + cpu.toFixed(0) + "%";
+
+},1000);
     
     let userName = localStorage.getItem("jarvis_user") || "";
     let lastCommand = "";
@@ -309,18 +322,19 @@ function manualCommand(){
 
     if(!core) return;
 
-    core.material.color.set(0x00ffff); // default
-
     if(state === "listening"){
         core.material.color.set(0x00ffff);
+        core.scale.set(1.2,1.2,1.2);
     }
 
     if(state === "thinking"){
         core.material.color.set(0xff00ff);
+        core.scale.set(1.4,1.4,1.4);
     }
 
     if(state === "speaking"){
         core.material.color.set(0x00ff00);
+        core.scale.set(1.1,1.1,1.1);
     }
 }
     
@@ -388,13 +402,39 @@ function processCommand(command){
     flashPanel();              // UI reaction
     setState("thinking");      // AI state
 
-    let reply = getOfflineResponse(command);   // MAIN AI LOGIC
+    let reply = smartCommandProcessor(command) || getOfflineResponse(command);
 
     updateResponse(reply);     // Show + Speak
 }
 
 // ---------------- ADVANCED SYSTEM CONTROL ----------------
 function getOfflineResponse(command){
+    function smartCommandProcessor(command){
+
+    let parts = command.split("and");
+
+    for(let i=0; i<parts.length; i++){
+
+        let cmd = parts[i].trim();
+
+        if(cmd.includes("open youtube")){
+            window.open("https://youtube.com");
+        }
+
+        else if(cmd.includes("play")){
+            let song = cmd.replace("play", "").trim();
+            let url = "https://www.youtube.com/results?search_query=" + encodeURIComponent(song);
+            window.open(url);
+        }
+
+        else if(cmd.includes("search")){
+            let query = cmd.replace("search", "").trim();
+            window.open("https://google.com/search?q=" + encodeURIComponent(query));
+        }
+    }
+
+    return "Task completed Commander.";
+}
 
     // ---------------- MEMORY ----------------
 if(command.includes("my name is")){
@@ -643,9 +683,17 @@ function generateSmartReply(command){
 
 // ---------------- VOICE OUTPUT ----------------
 function speak(text){
+
     const speech = new SpeechSynthesisUtterance(text);
-    speech.pitch = 0.8;
-    speech.rate = 0.9;
+
+    speech.pitch = 0.6;     // deeper voice
+    speech.rate = 0.85;     // slow robotic
+    speech.volume = 1;
+
+    // Try to select better voice
+    const voices = speechSynthesis.getVoices();
+    speech.voice = voices.find(v => v.name.includes("Google")) || voices[0];
+
     window.speechSynthesis.speak(speech);
 }
 
@@ -665,6 +713,7 @@ window.addEventListener('resize', ()=>{
     camera.updateProjectionMatrix();
 });
     window.onload = () => {
+        startListening();
     setTimeout(() => {
         startListening();
     }, 2000);
