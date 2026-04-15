@@ -208,9 +208,9 @@ canvas {
 <div id="statusText">Ready for command</div>
 <div id="overlay"></div>
 
-<button id="cmdBtn" onclick="manualCommand()">Command</button>
-<button id="voiceBtn" onclick="startListening()">🎤 Speak</button>
-
+<button id="cmdBtn" onclick="enableAudio(); manualCommand()">Command</button>
+<button id="voiceBtn" onclick="enableAudio(); startListening()">🎤 Speak</button>
+    
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
     function flashPanel(){
@@ -307,8 +307,15 @@ setInterval(()=>{
         new Date().toLocaleTimeString();
 },1000);
     
+    function enableAudio(){
+    speechSynthesis.resume();
+}
+   
 // ---------------- MANUAL INPUT ----------------
 function manualCommand(){
+
+    enableAudio();   // 🔥 IMPORTANT
+
     let cmd = prompt("Enter Command:");
     if(cmd){
         processCommand(cmd.toLowerCase());
@@ -684,17 +691,29 @@ function generateSmartReply(command){
 // ---------------- VOICE OUTPUT ----------------
 function speak(text){
 
+    if(!window.speechSynthesis){
+        console.log("Speech not supported");
+        return;
+    }
+
     const speech = new SpeechSynthesisUtterance(text);
 
-    speech.pitch = 0.6;     // deeper voice
-    speech.rate = 0.85;     // slow robotic
+    speech.pitch = 0.7;
+    speech.rate = 0.9;
     speech.volume = 1;
 
-    // Try to select better voice
-    const voices = speechSynthesis.getVoices();
-    speech.voice = voices.find(v => v.name.includes("Google")) || voices[0];
+    let voices = speechSynthesis.getVoices();
 
-    window.speechSynthesis.speak(speech);
+    if(voices.length === 0){
+        speechSynthesis.onvoiceschanged = () => {
+            voices = speechSynthesis.getVoices();
+            speech.voice = voices[0];
+            speechSynthesis.speak(speech);
+        };
+    } else {
+        speech.voice = voices[0];
+        speechSynthesis.speak(speech);
+    }
 }
 
 // ---------------- RESPONSE ----------------
