@@ -213,6 +213,9 @@ canvas {
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+    document.body.addEventListener("click", () => {
+    speechSynthesis.resume();
+});
     function flashPanel(){
     const panels = document.querySelectorAll("#leftPanel, #rightPanel");
     panels.forEach(panel=>{
@@ -692,7 +695,7 @@ function generateSmartReply(command){
 function speak(text){
 
     if(!window.speechSynthesis){
-        console.log("Speech not supported");
+        alert("Speech not supported in this browser");
         return;
     }
 
@@ -702,18 +705,19 @@ function speak(text){
     speech.rate = 0.9;
     speech.volume = 1;
 
-    let voices = speechSynthesis.getVoices();
+    function loadVoicesAndSpeak(){
+        let voices = speechSynthesis.getVoices();
 
-    if(voices.length === 0){
-        speechSynthesis.onvoiceschanged = () => {
-            voices = speechSynthesis.getVoices();
+        if(voices.length > 0){
             speech.voice = voices[0];
+            speechSynthesis.cancel();   // 🔥 IMPORTANT RESET
             speechSynthesis.speak(speech);
-        };
-    } else {
-        speech.voice = voices[0];
-        speechSynthesis.speak(speech);
+        } else {
+            setTimeout(loadVoicesAndSpeak, 100);
+        }
     }
+
+    loadVoicesAndSpeak();
 }
 
 // ---------------- RESPONSE ----------------
