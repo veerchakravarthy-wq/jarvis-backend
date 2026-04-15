@@ -378,19 +378,20 @@ function startListening(){
 
         // 🔥 WAKE WORD DETECTION
         if(transcript.includes("hey jarvis")){
+    activeMode = true;
 
-            let command = transcript.replace("hey jarvis", "").trim();
+    let command = transcript.replace("hey jarvis", "").trim();
 
-            // If user only says "hey jarvis"
-            if(command.length === 0){
-                updateResponse("Yes Commander, I'm listening.");
-                return;
-            }
+    if(command.length === 0){
+        updateResponse("Yes Commander.");
+        return;
+    }
 
-            processCommand(command);
-        }
-    };
-
+    processCommand(command);
+}
+else if(activeMode){
+    processCommand(transcript);
+}
     recognition.onerror = function(){
         recognition.start();
     };
@@ -427,9 +428,21 @@ function getOfflineResponse(command){
 
         let cmd = parts[i].trim();
 
+        if(command.includes("who is your boss")){
+    return "You are my commander.";
+}
+
+if(command.includes("are you real")){
+    return "I exist as a digital intelligence.";
+}
+
         if(cmd.includes("open youtube")){
             window.open("https://youtube.com");
         }
+            if(command.includes("stop listening")){
+    activeMode = false;
+    return "Going silent.";
+}
 
         else if(cmd.includes("play")){
             let song = cmd.replace("play", "").trim();
@@ -444,6 +457,13 @@ function getOfflineResponse(command){
     }
 
     return "Task completed Commander.";
+}
+    // Wikipedia-style answers
+if(command.startsWith("what is")){
+
+    let topic = command.replace("what is", "").trim();
+
+    return topic + " is an important concept. I will expand my knowledge soon.";
 }
 
     // ---------------- MEMORY ----------------
@@ -676,21 +696,39 @@ if(command.includes("play")){
 
 // ---------------- SMART REPLY ----------------
 function generateSmartReply(command){
-    if(command.includes("what") || command.includes("why")){
-        return "That requires deeper intelligence. Expanding capabilities.";
+
+    conversationMemory.push(command);
+
+    if(conversationMemory.length > 5){
+        conversationMemory.shift(); // keep last 5
     }
 
-    if(command.includes("how")){
-        return "Analyzing. I will improve my responses over time.";
+    // Basic intelligence
+    if(command.includes("your name")){
+        return "I am JARVIS, your AI assistant.";
     }
 
-    if(command.includes("help")){
-        return "You can ask for system status, open apps, or control device.";
+    if(command.includes("who am i")){
+        return userName ? "You are " + userName : "I do not know your name yet.";
     }
 
-    return "Command acknowledged.";
+    if(command.includes("how are you")){
+        return "All systems are functioning perfectly.";
+    }
+
+    if(command.includes("what can you do")){
+        return "I can control apps, answer questions, and assist you.";
+    }
+
+    // Context-based reply
+    let last = conversationMemory[conversationMemory.length - 2];
+
+    if(last && command.includes("why")){
+        return "Based on your previous request, that is how the system is designed.";
+    }
+
+    return "I am learning. Please expand my capabilities.";
 }
-
 // ---------------- VOICE OUTPUT ----------------
 function speak(text){
 
