@@ -210,8 +210,16 @@ canvas {
 <button id="voiceBtn" onclick="startListening()">🎤 Speak</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
 <script>
+    function flashPanel(){
+    const panels = document.querySelectorAll("#leftPanel, #rightPanel");
+    panels.forEach(panel=>{
+        panel.style.boxShadow="0 0 40px lime";
+        setTimeout(()=>{
+            panel.style.boxShadow="0 0 10px cyan, inset 0 0 10px cyan";
+        },300);
+    });
+}
     
     let userName = localStorage.getItem("jarvis_user") || "";
     let lastCommand = "";
@@ -375,14 +383,14 @@ function startListening(){
 // ---------------- COMMAND PROCESS ----------------
 function processCommand(command){
 
-    function flashPanel() {
-    const panels = document.querySelectorAll("#leftPanel, #rightPanel");
-    panels.forEach(panel => {
-        panel.style.boxShadow = "0 0 40px lime";
-        setTimeout(() => {
-            panel.style.boxShadow = "0 0 10px cyan, inset 0 0 10px cyan";
-        }, 300);
-    });
+    console.log("Command:", command);
+
+    flashPanel();              // UI reaction
+    setState("thinking");      // AI state
+
+    let reply = getOfflineResponse(command);   // MAIN AI LOGIC
+
+    updateResponse(reply);     // Show + Speak
 }
 
 // ---------------- ADVANCED SYSTEM CONTROL ----------------
@@ -427,10 +435,6 @@ if(command.includes("what did i say")){
     }
 
     // System
-    if(command.includes("system status")){
-        return "All systems are fully operational.";
-    }
-
     if(command.includes("diagnostics")){
         return "Running diagnostics. All modules functioning normally.";
     }
@@ -648,7 +652,9 @@ function speak(text){
 // ---------------- RESPONSE ----------------
 function updateResponse(text){
     setState("speaking");
-    document.getElementById("statusText").innerText = "Listening for wake word...";
+
+    document.getElementById("statusText").innerText = text;
+
     speak(text);
 }
 
